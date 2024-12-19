@@ -2,8 +2,30 @@ from tkinter import *
 from tkinter import messagebox
 from random import shuffle,randint,choice
 import pyperclip
+import json
 
 FONT_NAME = "Courier"
+
+# ---------------------------- Search Data ------------------------------- #
+def search_info():
+    w_input = (website_input.get())
+    u_input = (username_input.get())
+    p_input = (pass_input.get())
+    try:
+        with open("mydata.json") as data_file:
+            data = json.load(data_file)
+    except FileNotFoundError:
+        messagebox.showinfo(title="Error", message=f"No data file found")
+    else:
+        if w_input in data:
+            email =data[w_input]["email"]
+            password =data[w_input]["password"]
+            messagebox.showinfo(title = w_input, message=f"Email :{email} \nPassword :{password}")
+        else:
+            messagebox.showinfo(title="Error", message=f"The {w_input} is not  Exist in data")
+
+
+
 
 # ---------------------------- PASSWORD GENERATOR ------------------------------- #
 def pass_genrate():
@@ -36,17 +58,37 @@ def add_info():
     w_input = (website_input.get())
     u_input =(username_input.get())
     p_input =(pass_input.get())
+    new_data= {
+        w_input :{
+            "email":u_input ,
+            "password":p_input
+
+         }
+    }
 
     if len(w_input)==0 or len(p_input) == 0:
         messagebox.showinfo(title="Ooops", message=f"make sure you haven't left any fields blank!!!")
 
     else:
-        is_ok= messagebox.askokcancel(title= "website",message=f"These are the details entered :\nwebsite :{w_input}\n"
-                                                        f"Email :{u_input}\nPassword{p_input}")
+        try:
+             with open("mydata.json", "r") as file:
+                    # reading old data
+                    data = json.load(file)
+                    print(type(data))
+                 
+        except FileNotFoundError:
 
-        if is_ok:
-            with open("mydata.txt", "a") as file:
-                file.write(f"{w_input}   |   {u_input}    |   {p_input} \n")
+            with open("mydata.json", "w") as file:
+                json.dump(new_data, file, indent=4)
+
+        else:
+                # updating old data with new data
+                data.update(new_data)
+
+                with open("mydata.json", "w") as file:
+                    json.dump(data, file, indent=4)
+
+        finally:
                 # clear the entry
                 website_input.delete(0,END)
                 pass_input.delete(0, END)
@@ -54,12 +96,10 @@ def add_info():
 
 
 
-
-
 # ---------------------------- UI SETUP ------------------------------- #
 
 window =Tk()
-window.title("Pomodoro")
+window.title("Password Manager")
 window.config(padx= 50,pady=50)
 
 canvas =Canvas(width=200,height=200,highlightthickness=0)
@@ -77,8 +117,8 @@ pass_label2= Label(text="Password:",font=(FONT_NAME,10))
 pass_label2.grid(column=0, row=3)
 
 
-website_input = Entry(width=35)
-website_input.grid(column=1, row=1,columnspan =3)
+website_input = Entry(width=17)
+website_input.grid(column=1, row=1)
 website_input.focus()
 
 username_input = Entry(width=35)
@@ -93,6 +133,9 @@ Genrate_button .grid(column=2, row=3)
 
 add_button = Button(text ="Add" ,width=30,command=add_info)
 add_button.grid(column=1, row=4 ,columnspan=2)
+
+search_button = Button(text ="Search" ,command=search_info,width=10)
+search_button.grid(column=2, row=1 )
 
 
 window.mainloop()
